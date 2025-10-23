@@ -23,7 +23,7 @@ st.write("Sistema de IA genérico que analisa **imagens**, **textos** e **planil
 @st.cache_resource
 def load_caption_model():
     try:
-        model_name = "microsoft/git-large-coco"
+        model_name = "Salesforce/blip-image-captioning-base"
         captioner = pipeline("image-to-text", model=model_name)
         return captioner
     except:
