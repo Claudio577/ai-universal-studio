@@ -96,24 +96,29 @@ with aba[1]:
 # ======================================================
 with aba[2]:
     st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto)")
-    st.write("Envie uma **imagem** e/ou **texto descritivo**, e a IA fará a previsão com base no modelo treinado.")
+    st.write("Envie uma **imagem** e/ou **texto descritivo**, e depois clique em **Fazer previsão** para combinar as informações.")
 
     uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"], key="predict_img")
     texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
 
-    if uploaded_img or texto_input:
-        desc_img = ""
-        if uploaded_img:
-            image = Image.open(uploaded_img).convert("RGB")
-            st.image(image, caption="📸 Imagem enviada", use_container_width=True)
-            with st.spinner("🔍 Gerando descrição automática da imagem..."):
-                caption_en = captioner(image)[0]["generated_text"]
-                desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
+    desc_img = ""
+    if uploaded_img:
+        image = Image.open(uploaded_img).convert("RGB")
+        st.image(image, caption="📸 Imagem enviada", use_container_width=True)
+        with st.spinner("🔍 Gerando descrição automática da imagem..."):
+            caption_en = captioner(image)[0]["generated_text"]
+            desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
 
-        entrada = f"{desc_img} {texto_input}".strip()
-        st.text_area("🧩 Entrada combinada para previsão:", value=entrada, height=120)
+    entrada = f"{desc_img} {texto_input}".strip()
+    st.text_area("🧩 Entrada combinada:", value=entrada, height=120)
 
-        if st.session_state.modelo and st.session_state.vectorizer and entrada:
+    # --- Botão para previsão ---
+    if st.button("🔍 Fazer previsão"):
+        if not st.session_state.modelo or not st.session_state.vectorizer:
+            st.warning("⚠️ Treine o modelo na Etapa 2 antes de fazer previsões.")
+        elif not entrada:
+            st.warning("⚠️ Insira uma imagem e/ou texto para prever.")
+        else:
             X_novo = st.session_state.vectorizer.transform([entrada])
             pred = st.session_state.modelo.predict(X_novo)[0]
             cor = {"Baixo": "green", "Moderado": "orange", "Alto": "red"}[pred]
@@ -130,5 +135,4 @@ with aba[2]:
             if exemplos_relacionados:
                 st.markdown("📚 **Exemplos relacionados no treino:**")
                 st.write(exemplos_relacionados)
-        else:
-            st.info("ℹ️ Treine o modelo na Etapa 2 antes de fazer previsões.")
+
