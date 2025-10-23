@@ -39,7 +39,8 @@ for var, default in {
 # ==============================
 aba = st.tabs([
     "🧩 Etapa 1 - Base de Treinamento",
-    "🧠 Etapa 2 - Treinar e Prever"
+    "⚙️ Etapa 2 - Treinar Modelo",
+    "🔮 Etapa 3 - Fazer Previsão"
 ])
 
 # ======================================================
@@ -69,20 +70,15 @@ with aba[0]:
         st.dataframe(pd.DataFrame(entradas))
 
 # ======================================================
-# 2️⃣ ETAPA 2 – TREINAR E PREVER (Imagem + Texto)
+# 2️⃣ ETAPA 2 – TREINAR MODELO
 # ======================================================
 with aba[1]:
-    st.header("🧠 Etapa 2 – Treinar modelo e realizar previsões")
-    st.write("Primeiro treine o modelo com a base salva, depois adicione novos dados (imagens ou textos) para prever a categoria.")
+    st.header("⚙️ Etapa 2 – Treinar modelo com base na base de aprendizado")
 
-    # =======================
-    # 🚀 Treinamento
-    # =======================
-    st.subheader("🚀 Treinar modelo")
-    if st.button("Treinar agora"):
-        if not st.session_state.keywords or not st.session_state.categories:
-            st.warning("⚠️ Nenhum dado de aprendizado. Vá para a Etapa 1 primeiro.")
-        else:
+    if not st.session_state.keywords or not st.session_state.categories:
+        st.warning("⚠️ Nenhum dado de aprendizado. Vá para a Etapa 1 primeiro.")
+    else:
+        if st.button("🚀 Treinar modelo agora"):
             vectorizer = CountVectorizer()
             X = vectorizer.fit_transform(st.session_state.keywords)
             y = st.session_state.categories
@@ -90,12 +86,17 @@ with aba[1]:
             modelo.fit(X, y)
             st.session_state.vectorizer = vectorizer
             st.session_state.modelo = modelo
-            st.success("✅ Modelo treinado com sucesso!")
+            st.success("✅ Modelo treinado com sucesso! Vá para a Etapa 3 para prever.")
 
-    # =======================
-    # 🔮 Previsão
-    # =======================
-    st.subheader("🔮 Fazer previsão com novos dados")
+        if st.session_state.modelo:
+            st.info("✅ Modelo já treinado! Você pode ir para a Etapa 3.")
+
+# ======================================================
+# 3️⃣ ETAPA 3 – PREVISÃO (Imagem + Texto)
+# ======================================================
+with aba[2]:
+    st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto)")
+    st.write("Envie uma **imagem** e/ou **texto descritivo**, e a IA fará a previsão com base no modelo treinado.")
 
     uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"], key="predict_img")
     texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
@@ -130,4 +131,4 @@ with aba[1]:
                 st.markdown("📚 **Exemplos relacionados no treino:**")
                 st.write(exemplos_relacionados)
         else:
-            st.info("ℹ️ Treine o modelo primeiro antes de prever.")
+            st.info("ℹ️ Treine o modelo na Etapa 2 antes de fazer previsões.")
