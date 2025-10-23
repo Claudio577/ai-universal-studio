@@ -83,30 +83,29 @@ with aba[0]:
             df = pd.DataFrame(entradas)
             st.dataframe(df)
 
-          if st.button("🚀 Treinar modelo"):
-    try:
-        vectorizer = CountVectorizer(stop_words="portuguese")
+            if st.button("🚀 Treinar modelo"):
+                try:
+                    vectorizer = CountVectorizer(stop_words="portuguese")
 
-        # ✅ Garantir que todos os textos sejam strings válidas
-        if "texto" not in df.columns or "categoria" not in df.columns:
-            st.error("⚠️ O DataFrame precisa conter colunas chamadas 'texto' e 'categoria'.")
-        else:
-            df["texto"] = df["texto"].astype(str).fillna("")
-            df["categoria"] = df["categoria"].astype(str).fillna("")
+                    # ✅ Garantir que todos os textos sejam strings válidas
+                    if "texto" not in df.columns or "categoria" not in df.columns:
+                        st.error("⚠️ O DataFrame precisa conter colunas chamadas 'texto' e 'categoria'.")
+                    else:
+                        df["texto"] = df["texto"].astype(str).fillna("")
+                        df["categoria"] = df["categoria"].astype(str).fillna("")
 
-            X = vectorizer.fit_transform(df["texto"])
-            y = df["categoria"]
+                        X = vectorizer.fit_transform(df["texto"])
+                        y = df["categoria"]
 
-            modelo = RandomForestClassifier()
-            modelo.fit(X, y)
+                        modelo = RandomForestClassifier()
+                        modelo.fit(X, y)
 
-            st.session_state.vectorizer = vectorizer
-            st.session_state.modelo = modelo
+                        st.session_state.vectorizer = vectorizer
+                        st.session_state.modelo = modelo
 
-            st.success("✅ Modelo treinado com sucesso!")
-    except Exception as e:
-        st.error(f"❌ Erro durante o treinamento: {e}")
-
+                        st.success("✅ Modelo treinado com sucesso!")
+                except Exception as e:
+                    st.error(f"❌ Erro durante o treinamento: {e}")
 
     else:
         uploaded_csv = st.file_uploader("📎 Envie seu arquivo CSV", type=["csv"])
