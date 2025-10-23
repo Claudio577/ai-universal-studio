@@ -85,7 +85,7 @@ with aba[0]:
 
             if st.button("🚀 Treinar modelo"):
                 try:
-                    vectorizer = CountVectorizer(stop_words="portuguese")
+                    vectorizer = CountVectorizer()
 
                     # ✅ Garantir que todos os textos sejam strings válidas
                     if "texto" not in df.columns or "categoria" not in df.columns:
