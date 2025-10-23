@@ -269,4 +269,56 @@ with aba[4]:
         else:
             st.warning("⚠️ Treine um modelo primeiro com dados CSV ou TXT.")
 
+# ======================================================
+# 📝 ABA 6 – Treinar por Palavras-Chave
+# ======================================================
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+with st.tab("📝 Treinar por Palavras-Chave"):
+    st.header("📝 Treinamento Rápido por Palavras-Chave")
+    st.write("""
+    Digite **grupos de palavras ou frases** e associe cada grupo a uma **categoria** (por exemplo: "baixo", "moderado", "alto").  
+    O sistema treina um modelo simples para usar nas previsões futuras.
+    """)
+
+    n = st.number_input("Quantos grupos de palavras você quer adicionar?", min_value=1, max_value=10, value=3)
+
+    entradas = []
+    for i in range(n):
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            palavras = st.text_input(f"Palavras/frases do grupo {i+1}:", key=f"palavras_{i}")
+        with col2:
+            categoria = st.text_input(f"Categoria {i+1}:", key=f"categoria_{i}")
+        if palavras and categoria:
+            entradas.append({"texto": palavras, "categoria": categoria})
+
+    if len(entradas) > 1:
+        df = pd.DataFrame(entradas)
+        st.subheader("📋 Dados inseridos")
+        st.dataframe(df)
+
+        if st.button("🚀 Treinar modelo com essas palavras"):
+            vectorizer = CountVectorizer(stop_words="portuguese")
+            X = vectorizer.fit_transform(df["texto"])
+            y = df["categoria"]
+
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+            modelo = RandomForestClassifier()
+            modelo.fit(X_train, y_train)
+            y_pred = modelo.predict(X_test)
+            acc = accuracy_score(y_test, y_pred)
+
+            st.success(f"✅ Modelo treinado com precisão de {acc*100:.2f}%")
+
+            # Guardar na sessão
+            st.session_state.vectorizer = vectorizer
+            st.session_state.modelo = modelo
+
+            st.info("🧠 O modelo está pronto e pode ser usado na aba **🤖 Previsão Multimodal**.")
 
