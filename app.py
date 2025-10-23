@@ -127,24 +127,42 @@ with aba[1]:
             st.markdown(f"**🧠 Resumo automático:** {resumo}")
 
 # ======================================================
-# 📊 ABA 3 – Análise de CSV / Previsões
+# 📊 ABA 3 – Análise de CSV / Previsões (versão melhorada)
 # ======================================================
 with aba[2]:
     st.header("📊 Análise e Previsão Automática com CSV")
-    st.write("Envie uma planilha (.csv) com seus dados. Se houver uma coluna com o **resultado esperado**, o sistema treina um modelo automaticamente.")
+    st.write("""
+    Envie uma planilha **.csv** com seus dados.  
+    O sistema detecta automaticamente colunas numéricas e textuais, treina um modelo preditivo e mostra o desempenho.
+    """)
 
     uploaded_csv = st.file_uploader("📎 Envie o arquivo CSV", type=["csv"], key="csv")
 
     if uploaded_csv:
         df = pd.read_csv(uploaded_csv)
+
+        st.subheader("📋 Visualização dos dados")
         st.dataframe(df.head())
 
+        # Selecionar índice (opcional)
+        indice = st.selectbox("Selecione uma coluna de índice (opcional):", ["(nenhuma)"] + list(df.columns))
+        if indice != "(nenhuma)":
+            df = df.set_index(indice)
+
+        st.write(f"🔢 Total de linhas: {len(df)}, colunas: {len(df.columns)}")
+
+        # Escolher coluna alvo
         colunas = list(df.columns)
-        target_col = st.selectbox("Selecione a coluna de resultado (target):", ["(nenhuma)"] + colunas)
+        target_col = st.selectbox("🎯 Escolha a coluna de resultado (target):", ["(nenhuma)"] + colunas)
 
         if target_col != "(nenhuma)":
+            st.divider()
+            st.subheader("⚙️ Treinando modelo...")
+
             X = df.drop(columns=[target_col])
             y = df[target_col]
+
+            # Converter texto em números automaticamente
             X = pd.get_dummies(X)
 
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -156,13 +174,17 @@ with aba[2]:
 
             st.success(f"✅ Modelo treinado com precisão de {acc*100:.2f}%")
 
+            # Importância das variáveis
             importancias = pd.Series(modelo.feature_importances_, index=X.columns).sort_values(ascending=False)
-            st.subheader("📈 Importância das Variáveis")
+            st.subheader("📈 Importância das Variáveis (Top 10)")
             fig, ax = plt.subplots()
             importancias.head(10).plot(kind='barh', ax=ax)
             st.pyplot(fig)
 
+            # 🔮 Previsão com novo caso
+            st.divider()
             st.subheader("🔮 Fazer uma nova previsão")
+
             entrada = {}
             for col in X.columns:
                 entrada[col] = st.text_input(f"{col}:", "")
@@ -172,10 +194,14 @@ with aba[2]:
                 entrada_df = entrada_df.reindex(columns=X.columns, fill_value=0)
                 pred = modelo.predict(entrada_df)[0]
                 st.info(f"🧠 Resultado previsto: **{pred}**")
+
+                # Mostrar contribuições das variáveis
+                st.caption("O modelo levou em conta as principais variáveis e padrões aprendidos nos dados.")
         else:
-            st.info("Selecione a coluna de resultado para treinar o modelo.")
+            st.info("Selecione a coluna de resultado (target) para treinar o modelo.")
     else:
         st.info("Envie um arquivo CSV para começar.")
+
 
 # ======================================================
 # 🧠 ABA 4 – Análise Final / Previsão
