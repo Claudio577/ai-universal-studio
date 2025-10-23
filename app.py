@@ -82,34 +82,23 @@ with aba[0]:
         if len(entradas) > 1:
             df = pd.DataFrame(entradas)
             st.dataframe(df)
-            if len(entradas) > 1:
-    df = pd.DataFrame(entradas)
-    st.dataframe(df)
 
-    if st.button("🚀 Treinar modelo"):
-        vectorizer = CountVectorizer(stop_words="portuguese")
+            if st.button("🚀 Treinar modelo"):
+                vectorizer = CountVectorizer(stop_words="portuguese")
 
-        # ✅ Garantir que todos os textos sejam strings válidas
-        df["texto"] = df["texto"].astype(str).fillna("")
-        df["categoria"] = df["categoria"].astype(str).fillna("")
+                # ✅ Garantir que todos os textos sejam strings válidas
+                df["texto"] = df["texto"].astype(str).fillna("")
+                df["categoria"] = df["categoria"].astype(str).fillna("")
 
-        X = vectorizer.fit_transform(df["texto"])
-        y = df["categoria"]
-
-        modelo = RandomForestClassifier()
-        modelo.fit(X, y)
-
-        st.session_state.vectorizer = vectorizer
-        st.session_state.modelo = modelo
-
-        st.success("✅ Modelo treinado com sucesso!")
-
-
+                X = vectorizer.fit_transform(df["texto"])
+                y = df["categoria"]
 
                 modelo = RandomForestClassifier()
                 modelo.fit(X, y)
+
                 st.session_state.vectorizer = vectorizer
                 st.session_state.modelo = modelo
+
                 st.success("✅ Modelo treinado com sucesso!")
 
     else:
@@ -122,8 +111,10 @@ with aba[0]:
                 X = df.drop(columns=[target])
                 y = df[target]
                 X = pd.get_dummies(X)
+
                 modelo = RandomForestClassifier()
                 modelo.fit(X, y)
+
                 st.session_state.modelo = modelo
                 st.success("✅ Modelo treinado com sucesso!")
 
