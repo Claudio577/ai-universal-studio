@@ -11,7 +11,7 @@ from sklearn.ensemble import RandomForestClassifier
 # ==============================
 st.set_page_config(page_title="AI Universal Studio", page_icon="🧠", layout="wide")
 st.title("🧠 AI Universal Studio")
-st.write("Sistema de IA genérico que analisa **imagens**, **textos** e **planilhas (CSV)** para gerar **previsões e análises inteligentes** ⚡")
+st.write("Demonstração de um sistema de IA que aprende a partir de **imagens** e **textos** para gerar **previsões inteligentes** ⚡")
 
 # ==============================
 # 🧩 Modelos
@@ -29,9 +29,7 @@ for var, default in {
     "keywords": [],
     "categories": [],
     "modelo": None,
-    "vectorizer": None,
-    "img_desc": "",
-    "txt_desc": ""
+    "vectorizer": None
 }.items():
     if var not in st.session_state:
         st.session_state[var] = default
@@ -40,57 +38,44 @@ for var, default in {
 # 🧭 Abas
 # ==============================
 aba = st.tabs([
-    "🧩 Palavras-Chave / CSV",
-    "🧠 Previsão (Imagem + Texto)"
+    "🧩 Etapa 1 - Base de Treinamento",
+    "🧠 Etapa 2 - Treinar e Prever"
 ])
 
 # ======================================================
-# 1️⃣ PALAVRAS-CHAVE / CSV → base de aprendizado
+# 1️⃣ ETAPA 1 – BASE DE TREINAMENTO
 # ======================================================
 with aba[0]:
-    st.header("🧩 Geração de Palavras-Chave e Categorias")
-    modo = st.radio("Escolha o tipo de entrada:", ["Palavras-Chave", "Arquivo CSV"])
+    st.header("🧩 Etapa 1 – Criar base de aprendizado (Palavras + Categorias)")
+    st.write("Adicione até **3 exemplos de texto** para ensinar a IA o que significa cada categoria (Baixo, Moderado, Alto risco).")
 
-    if modo == "Palavras-Chave":
-        n = st.number_input("Quantos grupos deseja adicionar?", 1, 10, 3)
-        entradas = []
-        for i in range(n):
-            col1, col2 = st.columns([3, 1])
-            palavras = col1.text_input(f"Palavras/frases do grupo {i+1}:")
-            categoria = col2.selectbox(
-                f"Categoria {i+1}:",
-                ["Baixo", "Moderado", "Alto"],
-                index=1,
-                key=f"cat_{i}"
-            )
-            if palavras:
-                entradas.append({"texto": palavras, "categoria": categoria})
-        if entradas and st.button("💾 Salvar palavras-chave"):
-            st.session_state.keywords = [e["texto"] for e in entradas]
-            st.session_state.categories = [e["categoria"] for e in entradas]
-            st.success("✅ Palavras-chave e categorias salvas com sucesso!")
-            st.dataframe(pd.DataFrame(entradas))
+    entradas = []
+    for i in range(3):
+        col1, col2 = st.columns([3, 1])
+        palavras = col1.text_input(f"📝 Exemplo {i+1} (texto ou frase):", key=f"texto_{i}")
+        categoria = col2.selectbox(
+            f"🎯 Categoria {i+1}:",
+            ["Baixo", "Moderado", "Alto"],
+            index=1,
+            key=f"cat_{i}"
+        )
+        if palavras:
+            entradas.append({"texto": palavras, "categoria": categoria})
 
-    else:
-        uploaded_csv = st.file_uploader("📎 Envie seu CSV (para extrair palavras-chave)", type=["csv"])
-        if uploaded_csv:
-            df = pd.read_csv(uploaded_csv)
-            st.dataframe(df.head())
-            col_text = st.selectbox("Coluna de texto:", df.columns)
-            col_cat = st.selectbox("Coluna de categoria:", df.columns)
-            if st.button("💾 Extrair dados"):
-                st.session_state.keywords = df[col_text].dropna().astype(str).tolist()
-                st.session_state.categories = df[col_cat].dropna().astype(str).tolist()
-                st.success("✅ Palavras-chave e categorias extraídas!")
-                st.write(st.session_state.keywords[:5])
+    if entradas and st.button("💾 Salvar base de aprendizado"):
+        st.session_state.keywords = [e["texto"] for e in entradas]
+        st.session_state.categories = [e["categoria"] for e in entradas]
+        st.success("✅ Base de aprendizado salva com sucesso!")
+        st.dataframe(pd.DataFrame(entradas))
 
 # ======================================================
-# 2️⃣ PREVISÃO / TREINAMENTO REAL
+# 2️⃣ ETAPA 2 – TREINAR E PREVER (Imagem + Texto)
 # ======================================================
 with aba[1]:
-    st.header("🧠 Treinar e Prever com Imagem + Texto")
+    st.header("🧠 Etapa 2 – Treinar modelo e realizar previsões")
+    st.write("Envie uma **imagem** e/ou **texto descritivo**, e a IA fará a previsão com base nos exemplos anteriores.")
 
-    uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional)", type=["jpg", "jpeg", "png"])
+    uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"])
     texto_input = st.text_area("💬 Texto descritivo (opcional):")
 
     if uploaded_img or texto_input:
@@ -98,16 +83,17 @@ with aba[1]:
         if uploaded_img:
             image = Image.open(uploaded_img).convert("RGB")
             st.image(image, caption="📸 Imagem enviada", use_container_width=True)
-            caption_en = captioner(image)[0]["generated_text"]
-            desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
+            with st.spinner("🔍 Gerando descrição automática da imagem..."):
+                caption_en = captioner(image)[0]["generated_text"]
+                desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
 
         entrada = f"{desc_img} {texto_input}".strip()
-        st.text_area("🧩 Entrada combinada:", value=entrada, height=120)
+        st.text_area("🧩 Entrada combinada para previsão:", value=entrada, height=120)
 
-        # --- Treinamento ---
-        if st.button("🚀 Treinar modelo com base atual"):
+        # --- Treinamento rápido ---
+        if st.button("🚀 Treinar modelo"):
             if not st.session_state.keywords or not st.session_state.categories:
-                st.warning("⚠️ Nenhum dado de treinamento. Vá à aba anterior.")
+                st.warning("⚠️ Nenhum dado de aprendizado. Vá para a Etapa 1 primeiro.")
             else:
                 vectorizer = CountVectorizer()
                 X = vectorizer.fit_transform(st.session_state.keywords)
@@ -116,27 +102,25 @@ with aba[1]:
                 modelo.fit(X, y)
                 st.session_state.vectorizer = vectorizer
                 st.session_state.modelo = modelo
-                st.success("✅ Modelo treinado com sucesso com base nas palavras e categorias!")
+                st.success("✅ Modelo treinado com sucesso!")
 
         # --- Previsão ---
-        if st.session_state.modelo and st.session_state.vectorizer:
+        if st.session_state.modelo and st.session_state.vectorizer and entrada:
             X_novo = st.session_state.vectorizer.transform([entrada])
             pred = st.session_state.modelo.predict(X_novo)[0]
-
-            # Define cor de acordo com o risco
             cor = {"Baixo": "green", "Moderado": "orange", "Alto": "red"}[pred]
 
             st.markdown(
-                f"<h4>🧠 Previsão automática: <span style='color:{cor}'>{pred}</span></h4>",
+                f"<h3>🧠 Previsão da IA: <span style='color:{cor}'>{pred}</span></h3>",
                 unsafe_allow_html=True
             )
 
-            # Exemplo que influenciou
             exemplos_relacionados = [
                 kw for kw, cat in zip(st.session_state.keywords, st.session_state.categories)
                 if cat == pred
             ]
-            st.write(f"📚 Exemplos que ajudaram nessa previsão ({pred}):")
-            st.json(exemplos_relacionados[:3])
+            if exemplos_relacionados:
+                st.markdown("📚 **Exemplos usados para essa categoria:**")
+                st.write(exemplos_relacionados)
         else:
-            st.info("ℹ️ Treine o modelo primeiro para habilitar a previsão.")
+            st.info("ℹ️ Treine o modelo primeiro antes de prever.")
