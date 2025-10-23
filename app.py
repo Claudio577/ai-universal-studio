@@ -82,15 +82,28 @@ with aba[0]:
         if len(entradas) > 1:
             df = pd.DataFrame(entradas)
             st.dataframe(df)
-            if st.button("🚀 Treinar modelo"):
-               vectorizer = CountVectorizer(stop_words="portuguese")
+            if len(entradas) > 1:
+    df = pd.DataFrame(entradas)
+    st.dataframe(df)
 
-# ✅ Garantir que todos os textos sejam strings válidas
-df["texto"] = df["texto"].astype(str).fillna("")
-df["categoria"] = df["categoria"].astype(str).fillna("")
+    if st.button("🚀 Treinar modelo"):
+        vectorizer = CountVectorizer(stop_words="portuguese")
 
-X = vectorizer.fit_transform(df["texto"])
-y = df["categoria"]
+        # ✅ Garantir que todos os textos sejam strings válidas
+        df["texto"] = df["texto"].astype(str).fillna("")
+        df["categoria"] = df["categoria"].astype(str).fillna("")
+
+        X = vectorizer.fit_transform(df["texto"])
+        y = df["categoria"]
+
+        modelo = RandomForestClassifier()
+        modelo.fit(X, y)
+
+        st.session_state.vectorizer = vectorizer
+        st.session_state.modelo = modelo
+
+        st.success("✅ Modelo treinado com sucesso!")
+
 
 
                 modelo = RandomForestClassifier()
