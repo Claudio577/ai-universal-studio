@@ -83,9 +83,15 @@ with aba[0]:
             df = pd.DataFrame(entradas)
             st.dataframe(df)
             if st.button("🚀 Treinar modelo"):
-                vectorizer = CountVectorizer(stop_words="portuguese")
-                X = vectorizer.fit_transform(df["texto"])
-                y = df["categoria"]
+               vectorizer = CountVectorizer(stop_words="portuguese")
+
+# ✅ Garantir que todos os textos sejam strings válidas
+df["texto"] = df["texto"].astype(str).fillna("")
+df["categoria"] = df["categoria"].astype(str).fillna("")
+
+X = vectorizer.fit_transform(df["texto"])
+y = df["categoria"]
+
 
                 modelo = RandomForestClassifier()
                 modelo.fit(X, y)
