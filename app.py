@@ -73,10 +73,32 @@ with aba[0]:
 # ======================================================
 with aba[1]:
     st.header("🧠 Etapa 2 – Treinar modelo e realizar previsões")
-    st.write("Envie uma **imagem** e/ou **texto descritivo**, e a IA fará a previsão com base nos exemplos anteriores.")
+    st.write("Primeiro treine o modelo com a base salva, depois adicione novos dados (imagens ou textos) para prever a categoria.")
 
-    uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"])
-    texto_input = st.text_area("💬 Texto descritivo (opcional):")
+    # =======================
+    # 🚀 Treinamento
+    # =======================
+    st.subheader("🚀 Treinar modelo")
+    if st.button("Treinar agora"):
+        if not st.session_state.keywords or not st.session_state.categories:
+            st.warning("⚠️ Nenhum dado de aprendizado. Vá para a Etapa 1 primeiro.")
+        else:
+            vectorizer = CountVectorizer()
+            X = vectorizer.fit_transform(st.session_state.keywords)
+            y = st.session_state.categories
+            modelo = RandomForestClassifier()
+            modelo.fit(X, y)
+            st.session_state.vectorizer = vectorizer
+            st.session_state.modelo = modelo
+            st.success("✅ Modelo treinado com sucesso!")
+
+    # =======================
+    # 🔮 Previsão
+    # =======================
+    st.subheader("🔮 Fazer previsão com novos dados")
+
+    uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"], key="predict_img")
+    texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
 
     if uploaded_img or texto_input:
         desc_img = ""
@@ -90,21 +112,6 @@ with aba[1]:
         entrada = f"{desc_img} {texto_input}".strip()
         st.text_area("🧩 Entrada combinada para previsão:", value=entrada, height=120)
 
-        # --- Treinamento rápido ---
-        if st.button("🚀 Treinar modelo"):
-            if not st.session_state.keywords or not st.session_state.categories:
-                st.warning("⚠️ Nenhum dado de aprendizado. Vá para a Etapa 1 primeiro.")
-            else:
-                vectorizer = CountVectorizer()
-                X = vectorizer.fit_transform(st.session_state.keywords)
-                y = st.session_state.categories
-                modelo = RandomForestClassifier()
-                modelo.fit(X, y)
-                st.session_state.vectorizer = vectorizer
-                st.session_state.modelo = modelo
-                st.success("✅ Modelo treinado com sucesso!")
-
-        # --- Previsão ---
         if st.session_state.modelo and st.session_state.vectorizer and entrada:
             X_novo = st.session_state.vectorizer.transform([entrada])
             pred = st.session_state.modelo.predict(X_novo)[0]
@@ -120,7 +127,7 @@ with aba[1]:
                 if cat == pred
             ]
             if exemplos_relacionados:
-                st.markdown("📚 **Exemplos usados para essa categoria:**")
+                st.markdown("📚 **Exemplos relacionados no treino:**")
                 st.write(exemplos_relacionados)
         else:
             st.info("ℹ️ Treine o modelo primeiro antes de prever.")
