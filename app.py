@@ -18,7 +18,7 @@ st.title("🧠 AI Universal Studio")
 st.write("Um sistema de IA genérico que analisa **imagens**, **textos** e **planilhas (CSV)** para gerar **previsões e análises inteligentes** ⚡")
 
 # ==============================
-# 🧩 Carregamento de modelos
+# 🧩 Carregamento dos modelos
 # ==============================
 @st.cache_resource
 def load_caption_model():
@@ -52,6 +52,14 @@ aba = st.tabs([
     "🧠 Análise Final / Previsão"
 ])
 
+# ==============================
+# 🔁 Sessão compartilhada entre abas
+# ==============================
+if "img_desc" not in st.session_state:
+    st.session_state.img_desc = ""
+if "txt_desc" not in st.session_state:
+    st.session_state.txt_desc = ""
+
 # ======================================================
 # 🖼️ ABA 1 – Análise de Imagem
 # ======================================================
@@ -77,6 +85,8 @@ with aba[0]:
 
                 caption_pt = GoogleTranslator(source="en", target="pt").translate(caption_en)
 
+                st.session_state.img_desc = caption_pt  # 🔹 Salva a descrição para uso posterior
+
                 resumo_opcoes = [
                     "Um toque criativo para suas redes sociais!",
                     "Perfeito para inspirar o dia ✨",
@@ -86,16 +96,10 @@ with aba[0]:
                 ]
                 resumo_curto = random.choice(resumo_opcoes)
 
-                palavras = caption_pt.lower().split()
-                principais = [p.replace(",", "") for p in palavras if len(p) > 4]
-                hashtags = ["#" + p for p in principais[:5]]
-                hashtags_base = hashtags + ["#inspiracao", "#fotografia", "#ia", "#ai"]
-
-            st.success("✅ Análise concluída!")
-            st.markdown(f"**🇺🇸 Legenda (Inglês):** {caption_en}")
-            st.markdown(f"**🇧🇷 Tradução:** {caption_pt}")
-            st.markdown(f"**🪶 Resumo curto:** {resumo_curto}")
-            st.markdown(f"**🏷️ Hashtags:** {' '.join(hashtags_base)}")
+                st.success("✅ Análise concluída!")
+                st.markdown(f"**🇺🇸 Legenda (Inglês):** {caption_en}")
+                st.markdown(f"**🇧🇷 Tradução:** {caption_pt}")
+                st.markdown(f"**🪶 Resumo curto:** {resumo_curto}")
 
 # ======================================================
 # 💬 ABA 2 – Análise de Texto
@@ -104,7 +108,7 @@ with aba[1]:
     st.header("💬 Análise de Texto")
     st.write("Cole ou envie um texto para análise automática com IA. O sistema irá gerar um **resumo** e **insights**.")
 
-    texto = st.text_area("Digite ou cole seu texto aqui:", height=200)
+    texto = st.text_area("Digite ou cole seu texto aqui:", height=200, key="texto_input")
 
     if st.button("🧠 Analisar Texto"):
         if not texto:
@@ -114,6 +118,7 @@ with aba[1]:
                 if refiner:
                     prompt = f"Resuma e destaque os pontos principais do texto: {texto}"
                     resumo = refiner(prompt, max_new_tokens=100)[0]["generated_text"]
+                    st.session_state.txt_desc = resumo  # 🔹 Guarda o resumo para a aba final
                 else:
                     resumo = "⚠️ Modelo de texto não carregado. Tente novamente."
 
@@ -179,12 +184,13 @@ with aba[3]:
     st.header("🧠 Análise Final / Previsão")
     st.write("Combine imagem e texto para obter uma **análise preditiva** do caso com explicação.")
 
-    img_desc = st.text_area("📷 Descrição automática da imagem (cole aqui):")
-    txt_desc = st.text_area("🩺 Texto clínico ou observações:")
+    # 🔹 Campos já vêm preenchidos automaticamente das abas anteriores
+    img_desc = st.text_area("📷 Descrição automática da imagem:", value=st.session_state.img_desc, height=120)
+    txt_desc = st.text_area("🩺 Texto clínico ou observações:", value=st.session_state.txt_desc, height=120)
 
     if st.button("🔮 Gerar Análise Final"):
-        combinado = img_desc.strip() + " " + txt_desc.strip()
-        if not combinado.strip():
+        combinado = (img_desc.strip() + " " + txt_desc.strip()).strip()
+        if not combinado:
             st.warning("Por favor, insira descrição da imagem e/ou texto clínico.")
         else:
             with st.spinner("Gerando análise final com IA..."):
