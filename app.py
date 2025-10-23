@@ -232,3 +232,41 @@ with aba[3]:
                 else:
                     st.warning("Modelo de texto não carregado. Tente novamente.")
 
+# ======================================================
+# 🤖 ABA 5 – Previsão Multimodal (Imagem + Texto)
+# ======================================================
+with aba[4]:
+    st.header("🤖 Previsão Multimodal (Imagem + Texto)")
+    st.write("""
+    Combine **imagem e texto** para gerar uma previsão automática com base no modelo que foi treinado
+    anteriormente com CSV ou TXT.
+    """)
+
+    uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional)", type=["jpg", "jpeg", "png"])
+    texto_input = st.text_area("💬 Escreva ou cole um texto (opcional):")
+
+    if uploaded_img or texto_input:
+        # Gera a descrição da imagem se houver
+        desc_img = ""
+        if uploaded_img:
+            image = Image.open(uploaded_img).convert("RGB")
+            st.image(image, caption="📸 Imagem enviada", use_container_width=True)
+
+            caption_en = captioner(image)[0]["generated_text"]
+            caption_pt = GoogleTranslator(source="en", target="pt").translate(caption_en)
+            desc_img = caption_pt
+
+        # Junta a descrição e o texto do usuário
+        entrada_unificada = f"{desc_img} {texto_input}".strip()
+        st.markdown("### 🧩 Texto combinado para análise:")
+        st.write(entrada_unificada)
+
+        # Faz a previsão se já houver modelo treinado
+        if "vectorizer" in st.session_state and "modelo" in st.session_state:
+            X_novo = st.session_state.vectorizer.transform([entrada_unificada])
+            pred = st.session_state.modelo.predict(X_novo)[0]
+            st.success(f"🧠 Previsão automática: **{pred}**")
+        else:
+            st.warning("⚠️ Treine um modelo primeiro com dados CSV ou TXT.")
+
+
