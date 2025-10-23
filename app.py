@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-import io
 import random
 
 # ==============================
@@ -16,7 +15,7 @@ import random
 st.set_page_config(page_title="AI Universal Studio", page_icon="🧠", layout="wide")
 
 st.title("🧠 AI Universal Studio")
-st.write("Um sistema de IA genérico que analisa **imagens**, **textos** e **planilhas (CSV)** para gerar **previsões automáticas** ⚡")
+st.write("Um sistema de IA genérico que analisa **imagens**, **textos** e **planilhas (CSV)** para gerar **previsões e análises inteligentes** ⚡")
 
 # ==============================
 # 🧩 Carregamento de modelos
@@ -24,7 +23,7 @@ st.write("Um sistema de IA genérico que analisa **imagens**, **textos** e **pla
 @st.cache_resource
 def load_caption_model():
     try:
-        model_name = "microsoft/git-large-coco"  # Leve e compatível com Streamlit Cloud
+        model_name = "microsoft/git-large-coco"
         captioner = pipeline("image-to-text", model=model_name)
         return captioner, model_name
     except Exception:
@@ -46,7 +45,12 @@ refiner = load_text_model()
 # ==============================
 # 🧭 Interface em abas
 # ==============================
-aba = st.tabs(["🖼️ Análise de Imagem", "💬 Análise de Texto", "📊 Análise de CSV / Previsões"])
+aba = st.tabs([
+    "🖼️ Análise de Imagem",
+    "💬 Análise de Texto",
+    "📊 Análise de CSV / Previsões",
+    "🧠 Análise Final / Previsão"
+])
 
 # ======================================================
 # 🖼️ ABA 1 – Análise de Imagem
@@ -136,8 +140,6 @@ with aba[2]:
         if target_col != "(nenhuma)":
             X = df.drop(columns=[target_col])
             y = df[target_col]
-
-            # Converter texto em números automaticamente
             X = pd.get_dummies(X)
 
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -149,14 +151,12 @@ with aba[2]:
 
             st.success(f"✅ Modelo treinado com precisão de {acc*100:.2f}%")
 
-            # Exibir importância das features
             importancias = pd.Series(modelo.feature_importances_, index=X.columns).sort_values(ascending=False)
             st.subheader("📈 Importância das Variáveis")
             fig, ax = plt.subplots()
             importancias.head(10).plot(kind='barh', ax=ax)
             st.pyplot(fig)
 
-            # Previsão manual
             st.subheader("🔮 Fazer uma nova previsão")
             entrada = {}
             for col in X.columns:
@@ -171,3 +171,32 @@ with aba[2]:
             st.info("Selecione a coluna de resultado para treinar o modelo.")
     else:
         st.info("Envie um arquivo CSV para começar.")
+
+# ======================================================
+# 🧠 ABA 4 – Análise Final / Previsão
+# ======================================================
+with aba[3]:
+    st.header("🧠 Análise Final / Previsão")
+    st.write("Combine imagem e texto para obter uma **análise preditiva** do caso com explicação.")
+
+    img_desc = st.text_area("📷 Descrição automática da imagem (cole aqui):")
+    txt_desc = st.text_area("🩺 Texto clínico ou observações:")
+
+    if st.button("🔮 Gerar Análise Final"):
+        combinado = img_desc.strip() + " " + txt_desc.strip()
+        if not combinado.strip():
+            st.warning("Por favor, insira descrição da imagem e/ou texto clínico.")
+        else:
+            with st.spinner("Gerando análise final com IA..."):
+                if refiner:
+                    prompt = (
+                        "Analise o seguinte caso e classifique o risco como "
+                        "baixo, moderado ou alto, justificando a resposta de forma profissional e ética:\n\n"
+                        + combinado
+                    )
+                    analise = refiner(prompt, max_new_tokens=150)[0]["generated_text"]
+                    st.success("✅ Análise final gerada:")
+                    st.write(analise)
+                else:
+                    st.warning("Modelo de texto não carregado. Tente novamente.")
+
