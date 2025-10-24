@@ -5,7 +5,6 @@ from deep_translator import GoogleTranslator
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import RandomForestClassifier
-from streamlit_audio_recorder import audio_recorder
 import tempfile
 
 # ==============================
@@ -13,7 +12,7 @@ import tempfile
 # ==============================
 st.set_page_config(page_title="AI Universal Studio", page_icon="🧠", layout="wide")
 st.title("🧠 AI Universal Studio")
-st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**, **textos** e **voz** para gerar **previsões inteligentes** ⚡")
+st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**, **textos** e **voz** (via upload) para gerar **previsões inteligentes** ⚡")
 
 # ==============================
 # 🧩 Modelos
@@ -103,7 +102,7 @@ with aba[1]:
 # ======================================================
 with aba[2]:
     st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto + áudio)")
-    st.write("Envie uma **imagem**, **texto** e/ou **grave sua voz**, e depois clique em **Fazer previsão** para combinar as informações.")
+    st.write("Envie uma **imagem**, **texto** e/ou **áudio (upload)** e clique em **Fazer previsão** para combinar as informações.")
 
     # 📷 Imagem opcional
     uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"], key="predict_img")
@@ -111,7 +110,7 @@ with aba[2]:
     # 💬 Texto opcional
     texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
 
-        # 🎤 Upload de áudio (opcional)
+    # 🎤 Upload de áudio (opcional)
     st.subheader("🎤 Envie um áudio de voz (opcional)")
     uploaded_audio = st.file_uploader("🎧 Arquivo de áudio (.wav, .mp3, .m4a)", type=["wav", "mp3", "m4a"])
 
@@ -162,4 +161,3 @@ with aba[2]:
             if exemplos_relacionados:
                 st.markdown("📚 **Exemplos relacionados no treino:**")
                 st.write(exemplos_relacionados)
-
