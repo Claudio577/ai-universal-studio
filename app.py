@@ -111,20 +111,20 @@ with aba[2]:
     # 💬 Texto opcional
     texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
 
-    # 🎤 Upload de áudio (opcional)
-st.subheader("🎤 Envie um áudio de voz (opcional)")
-uploaded_audio = st.file_uploader("🎧 Arquivo de áudio (.wav, .mp3, .m4a)", type=["wav", "mp3", "m4a"])
+        # 🎤 Upload de áudio (opcional)
+    st.subheader("🎤 Envie um áudio de voz (opcional)")
+    uploaded_audio = st.file_uploader("🎧 Arquivo de áudio (.wav, .mp3, .m4a)", type=["wav", "mp3", "m4a"])
 
-audio_text = ""
-if uploaded_audio:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-        tmp.write(uploaded_audio.read())
-        tmp_path = tmp.name
-    with st.spinner("🔍 Transcrevendo áudio..."):
-        result = asr(tmp_path)
-        audio_text = result["text"]
-    st.success("✅ Transcrição concluída!")
-    st.text_area("🗣️ Texto transcrito automaticamente:", value=audio_text, height=100)
+    audio_text = ""
+    if uploaded_audio:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+            tmp.write(uploaded_audio.read())
+            tmp_path = tmp.name
+        with st.spinner("🔍 Transcrevendo áudio..."):
+            result = asr(tmp_path)
+            audio_text = result["text"]
+        st.success("✅ Transcrição concluída!")
+        st.text_area("🗣️ Texto transcrito automaticamente:", value=audio_text, height=100)
 
     # 🧠 Geração da descrição da imagem
     desc_img = ""
