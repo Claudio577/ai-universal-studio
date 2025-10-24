@@ -92,40 +92,42 @@ with aba[1]:
             st.info("✅ Modelo já treinado! Você pode ir para a Etapa 3.")
 
 # ======================================================
-# 3️⃣ ETAPA 3 – PREVISÃO (Imagem + Texto)
+# 3️⃣ ETAPA 3 – PREVISÃO (Imagem + Texto + Áudio)
 # ======================================================
 with aba[2]:
-    st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto)")
-    st.write("Envie uma **imagem** e/ou **texto descritivo**, e depois clique em **Fazer previsão** para combinar as informações.")
+    st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto + áudio)")
+    st.write("Envie uma **imagem**, **texto** e/ou **áudio**, e depois clique em **Fazer previsão** para combinar as informações.")
 
+    # 📷 Imagem opcional
     uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"], key="predict_img")
+
+    # 💬 Texto opcional
     texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
 
-    # ======================================================
-# 🎤 Leitor de som (voz para texto)
-# ======================================================
-st.subheader("🎤 Envie um áudio de voz (opcional)")
-uploaded_audio = st.file_uploader("🎧 Arquivo de áudio (.wav, .mp3, .m4a)", type=["wav", "mp3", "m4a"], key="audio_input")
+    # 🎤 Áudio opcional
+    st.subheader("🎤 Envie um áudio de voz (opcional)")
+    uploaded_audio = st.file_uploader("🎧 Arquivo de áudio (.wav, .mp3, .m4a)", type=["wav", "mp3", "m4a"], key="audio_input")
 
-@st.cache_resource
-def load_audio_model():
-    return pipeline("automatic-speech-recognition", model="openai/whisper-base")
+    @st.cache_resource
+    def load_audio_model():
+        return pipeline("automatic-speech-recognition", model="openai/whisper-base")
 
-asr = load_audio_model()
+    asr = load_audio_model()
 
-audio_text = ""
-if uploaded_audio:
-    with st.spinner("🔍 Transcrevendo áudio..."):
-        import tempfile
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-            tmp.write(uploaded_audio.read())
-            tmp_path = tmp.name
+    audio_text = ""
+    if uploaded_audio:
+        with st.spinner("🔍 Transcrevendo áudio..."):
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+                tmp.write(uploaded_audio.read())
+                tmp_path = tmp.name
 
-        result = asr(tmp_path)
-        audio_text = result["text"]
-        st.success("✅ Transcrição concluída!")
-        st.text_area("🗣️ Texto transcrito automaticamente:", value=audio_text, height=100)
+            result = asr(tmp_path)
+            audio_text = result["text"]
+            st.success("✅ Transcrição concluída!")
+            st.text_area("🗣️ Texto transcrito automaticamente:", value=audio_text, height=100)
 
+    # 🧠 Geração da descrição da imagem
     desc_img = ""
     if uploaded_img:
         image = Image.open(uploaded_img).convert("RGB")
@@ -134,15 +136,16 @@ if uploaded_audio:
             caption_en = captioner(image)[0]["generated_text"]
             desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
 
+    # 🧩 Combina todas as fontes de entrada
     entrada = f"{desc_img} {texto_input} {audio_text}".strip()
     st.text_area("🧩 Entrada combinada:", value=entrada, height=120)
 
-    # --- Botão para previsão ---
+    # 🔍 Fazer previsão
     if st.button("🔍 Fazer previsão"):
         if not st.session_state.modelo or not st.session_state.vectorizer:
             st.warning("⚠️ Treine o modelo na Etapa 2 antes de fazer previsões.")
         elif not entrada:
-            st.warning("⚠️ Insira uma imagem e/ou texto para prever.")
+            st.warning("⚠️ Insira uma imagem, texto e/ou áudio para prever.")
         else:
             X_novo = st.session_state.vectorizer.transform([entrada])
             pred = st.session_state.modelo.predict(X_novo)[0]
