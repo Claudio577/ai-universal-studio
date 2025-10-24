@@ -5,13 +5,15 @@ from deep_translator import GoogleTranslator
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import RandomForestClassifier
+from streamlit_audio_recorder import audio_recorder
+import tempfile
 
 # ==============================
 # ⚙️ Configuração inicial
 # ==============================
 st.set_page_config(page_title="AI Universal Studio", page_icon="🧠", layout="wide")
 st.title("🧠 AI Universal Studio")
-st.write("Demonstração de um sistema de IA que aprende a partir de **imagens** e **textos** para gerar **previsões inteligentes** ⚡")
+st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**, **textos** e **voz** para gerar **previsões inteligentes** ⚡")
 
 # ==============================
 # 🧩 Modelos
@@ -20,7 +22,12 @@ st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**
 def load_caption_model():
     return pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
 
+@st.cache_resource
+def load_audio_model():
+    return pipeline("automatic-speech-recognition", model="openai/whisper-base")
+
 captioner = load_caption_model()
+asr = load_audio_model()
 
 # ==============================
 # 🔁 Sessão compartilhada
@@ -96,7 +103,7 @@ with aba[1]:
 # ======================================================
 with aba[2]:
     st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto + áudio)")
-    st.write("Envie uma **imagem**, **texto** e/ou **áudio**, e depois clique em **Fazer previsão** para combinar as informações.")
+    st.write("Envie uma **imagem**, **texto** e/ou **grave sua voz**, e depois clique em **Fazer previsão** para combinar as informações.")
 
     # 📷 Imagem opcional
     uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"], key="predict_img")
@@ -104,28 +111,22 @@ with aba[2]:
     # 💬 Texto opcional
     texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
 
-    # 🎤 Áudio opcional
-    st.subheader("🎤 Envie um áudio de voz (opcional)")
-    uploaded_audio = st.file_uploader("🎧 Arquivo de áudio (.wav, .mp3, .m4a)", type=["wav", "mp3", "m4a"], key="audio_input")
-
-    @st.cache_resource
-    def load_audio_model():
-        return pipeline("automatic-speech-recognition", model="openai/whisper-base")
-
-    asr = load_audio_model()
-
+    # 🎙️ Gravação de voz ao vivo
+    st.subheader("🎙️ Grave sua voz (opcional)")
+    audio_bytes = audio_recorder(text="Clique para gravar 🎤", icon_size="2x")
     audio_text = ""
-    if uploaded_audio:
-        with st.spinner("🔍 Transcrevendo áudio..."):
-            import tempfile
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-                tmp.write(uploaded_audio.read())
-                tmp_path = tmp.name
 
+    if audio_bytes:
+        st.audio(audio_bytes, format="audio/wav")
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+            tmp.write(audio_bytes)
+            tmp_path = tmp.name
+
+        with st.spinner("🔍 Transcrevendo áudio..."):
             result = asr(tmp_path)
             audio_text = result["text"]
-            st.success("✅ Transcrição concluída!")
-            st.text_area("🗣️ Texto transcrito automaticamente:", value=audio_text, height=100)
+        st.success("✅ Transcrição concluída!")
+        st.text_area("🗣️ Texto capturado pelo microfone:", value=audio_text, height=100)
 
     # 🧠 Geração da descrição da imagem
     desc_img = ""
