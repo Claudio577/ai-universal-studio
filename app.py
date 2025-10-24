@@ -101,6 +101,31 @@ with aba[2]:
     uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"], key="predict_img")
     texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
 
+    # ======================================================
+# 🎤 Leitor de som (voz para texto)
+# ======================================================
+st.subheader("🎤 Envie um áudio de voz (opcional)")
+uploaded_audio = st.file_uploader("🎧 Arquivo de áudio (.wav, .mp3, .m4a)", type=["wav", "mp3", "m4a"], key="audio_input")
+
+@st.cache_resource
+def load_audio_model():
+    return pipeline("automatic-speech-recognition", model="openai/whisper-base")
+
+asr = load_audio_model()
+
+audio_text = ""
+if uploaded_audio:
+    with st.spinner("🔍 Transcrevendo áudio..."):
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+            tmp.write(uploaded_audio.read())
+            tmp_path = tmp.name
+
+        result = asr(tmp_path)
+        audio_text = result["text"]
+        st.success("✅ Transcrição concluída!")
+        st.text_area("🗣️ Texto transcrito automaticamente:", value=audio_text, height=100)
+
     desc_img = ""
     if uploaded_img:
         image = Image.open(uploaded_img).convert("RGB")
@@ -109,7 +134,7 @@ with aba[2]:
             caption_en = captioner(image)[0]["generated_text"]
             desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
 
-    entrada = f"{desc_img} {texto_input}".strip()
+    entrada = f"{desc_img} {texto_input} {audio_text}".strip()
     st.text_area("🧩 Entrada combinada:", value=entrada, height=120)
 
     # --- Botão para previsão ---
