@@ -6,3 +6,4 @@ scikit-learn
 Pillow
 deep-translator
 matplotlib
+streamlit-audio-recorder
