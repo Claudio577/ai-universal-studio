@@ -7,3 +7,5 @@ Pillow
 deep-translator
 matplotlib
 streamlit-audio-recorder
+soundfile
+
