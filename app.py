@@ -106,7 +106,7 @@ with aba[1]:
             st.write(f"Total de **{len(vocab)}** palavras aprendidas.")
             st.write(", ".join(sorted(vocab)))
 
-            # (Opcional) Mostrar por categoria
+            # Mostrar por categoria
             df_treino = pd.DataFrame({
                 "texto": st.session_state.keywords,
                 "categoria": st.session_state.categories
@@ -114,18 +114,11 @@ with aba[1]:
 
             st.markdown("### 📚 Palavras aprendidas por categoria:")
 
-df_treino = pd.DataFrame({
-    "texto": st.session_state.keywords,
-    "categoria": st.session_state.categories
-})
-
-for categoria in df_treino["categoria"].unique():
-    textos_cat = " ".join(
-        df_treino[df_treino["categoria"] == categoria]["texto"]
-    ).lower()
-    palavras_cat = set(st.session_state.vectorizer.build_tokenizer()(textos_cat))
-    st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_cat)))
-
+            tokenizer = st.session_state.vectorizer.build_analyzer()
+            for categoria in df_treino["categoria"].unique():
+                textos_cat = " ".join(df_treino[df_treino["categoria"] == categoria]["texto"]).lower()
+                palavras_cat = set(tokenizer(textos_cat))
+                st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_cat)))
 
 # ======================================================
 # 3️⃣ ETAPA 3 – PREVISÃO (Imagem + Texto + Áudio)
@@ -166,47 +159,44 @@ with aba[2]:
 
     # 🧩 Combina todas as fontes de entrada
     entrada = f"{desc_img} {texto_input} {audio_text}".strip()
-    st.text_area("🧩 Entrada combinada:", value=entrada, height=120)
+    st.text_area("🧩 Entrada combinada:", value=entrada, height=120, key="entrada_combinada")
 
-    # 🧩 Combina todas as fontes de entrada
-entrada = f"{desc_img} {texto_input} {audio_text}".strip()
-st.text_area("🧩 Entrada combinada:", value=entrada, height=120, key="entrada_combinada")
+    # ======================================================
+    # 🔑 Mostrar palavras reconhecidas pelo modelo
+    # ======================================================
+    if entrada and st.session_state.vectorizer:
+        vocab = set(st.session_state.vectorizer.get_feature_names_out())
+        tokenizer = st.session_state.vectorizer.build_analyzer()
+        palavras_entrada = set(tokenizer(entrada.lower()))
 
-# ======================================================
-# 🔑 Mostrar palavras reconhecidas pelo modelo
-# ======================================================
-if entrada and st.session_state.vectorizer:
-    vocab = set(st.session_state.vectorizer.get_feature_names_out())
-    palavras_entrada = set(st.session_state.vectorizer.build_tokenizer()(entrada.lower()))
-    
-    palavras_reconhecidas = palavras_entrada.intersection(vocab)
-    palavras_nao_reconhecidas = palavras_entrada.difference(vocab)
+        palavras_reconhecidas = palavras_entrada.intersection(vocab)
+        palavras_nao_reconhecidas = palavras_entrada.difference(vocab)
 
-    st.markdown("### 🧠 Palavras reconhecidas pelo modelo:")
-    if palavras_reconhecidas:
-        df_treino = pd.DataFrame({
-    "texto": st.session_state.keywords,
-    "categoria": st.session_state.categories
-})
+        st.markdown("### 🧠 Palavras reconhecidas pelo modelo:")
+        if palavras_reconhecidas:
+            df_treino = pd.DataFrame({
+                "texto": st.session_state.keywords,
+                "categoria": st.session_state.categories
+            })
 
-for categoria in df_treino["categoria"].unique():
-    textos_cat = " ".join(df_treino[df_treino["categoria"] == categoria]["texto"]).lower()
-    palavras_cat = set(st.session_state.vectorizer.build_tokenizer()(textos_cat))
-    palavras_match = palavras_cat.intersection(palavras_reconhecidas)
-    if palavras_match:
-        st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_match)))
-
-    else:
-        st.warning("⚠️ Nenhuma palavra reconhecida do vocabulário treinado.")
-
-    with st.expander("🔍 Palavras não reconhecidas (fora do vocabulário):"):
-        if palavras_nao_reconhecidas:
-            st.write(", ".join(sorted(palavras_nao_reconhecidas)))
+            for categoria in df_treino["categoria"].unique():
+                textos_cat = " ".join(df_treino[df_treino["categoria"] == categoria]["texto"]).lower()
+                palavras_cat = set(tokenizer(textos_cat))
+                palavras_match = palavras_cat.intersection(palavras_reconhecidas)
+                if palavras_match:
+                    st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_match)))
         else:
-            st.write("Nenhuma palavra fora do vocabulário.")
+            st.warning("⚠️ Nenhuma palavra reconhecida do vocabulário treinado.")
 
+        with st.expander("🔍 Palavras não reconhecidas (fora do vocabulário):"):
+            if palavras_nao_reconhecidas:
+                st.write(", ".join(sorted(palavras_nao_reconhecidas)))
+            else:
+                st.write("Nenhuma palavra fora do vocabulário.")
 
+    # ======================================================
     # 🔍 Fazer previsão
+    # ======================================================
     if st.button("🔍 Fazer previsão"):
         if not st.session_state.modelo or not st.session_state.vectorizer:
             st.warning("⚠️ Treine o modelo na Etapa 2 antes de fazer previsões.")
