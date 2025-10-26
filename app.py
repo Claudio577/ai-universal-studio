@@ -177,7 +177,18 @@ if entrada and st.session_state.vectorizer:
 
     st.markdown("### 🧠 Palavras reconhecidas pelo modelo:")
     if palavras_reconhecidas:
-        st.success(", ".join(sorted(palavras_reconhecidas)))
+        df_treino = pd.DataFrame({
+    "texto": st.session_state.keywords,
+    "categoria": st.session_state.categories
+})
+
+for categoria in df_treino["categoria"].unique():
+    textos_cat = " ".join(df_treino[df_treino["categoria"] == categoria]["texto"]).lower()
+    palavras_cat = set(st.session_state.vectorizer.build_tokenizer()(textos_cat))
+    palavras_match = palavras_cat.intersection(palavras_reconhecidas)
+    if palavras_match:
+        st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_match)))
+
     else:
         st.warning("⚠️ Nenhuma palavra reconhecida do vocabulário treinado.")
 
