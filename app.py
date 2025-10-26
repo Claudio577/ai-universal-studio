@@ -163,7 +163,7 @@ with aba[2]:
 
     # 🧩 Combina todas as fontes de entrada
 entrada = f"{desc_img} {texto_input} {audio_text}".strip()
-st.text_area("🧩 Entrada combinada:", value=entrada, height=120)
+st.text_area("🧩 Entrada combinada:", value=entrada, height=120, key="entrada_combinada")
 
 # ======================================================
 # 🔑 Mostrar palavras reconhecidas pelo modelo
