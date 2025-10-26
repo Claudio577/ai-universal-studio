@@ -94,8 +94,31 @@ with aba[1]:
             st.session_state.modelo = modelo
             st.success("✅ Modelo treinado com sucesso! Vá para a Etapa 3 para prever.")
 
-        if st.session_state.modelo:
+        if st.session_state.modelo and st.session_state.vectorizer:
             st.info("✅ Modelo já treinado! Você pode ir para a Etapa 3.")
+
+            # ======================================================
+            # 🧠 Mostrar palavras-chave aprendidas pelo modelo
+            # ======================================================
+            st.subheader("🧠 Palavras-chave aprendidas pelo modelo")
+
+            vocab = st.session_state.vectorizer.get_feature_names_out()
+            st.write(f"Total de **{len(vocab)}** palavras aprendidas.")
+            st.write(", ".join(sorted(vocab)))
+
+            # (Opcional) Mostrar por categoria
+            df_treino = pd.DataFrame({
+                "texto": st.session_state.keywords,
+                "categoria": st.session_state.categories
+            })
+
+            st.markdown("### 📚 Palavras aprendidas por categoria:")
+            for categoria in df_treino["categoria"].unique():
+                textos_cat = " ".join(
+                    df_treino[df_treino["categoria"] == categoria]["texto"]
+                ).lower()
+                palavras_cat = set(st.session_state.vectorizer.build_tokenizer()(textos_cat))
+                st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_cat)))
 
 # ======================================================
 # 3️⃣ ETAPA 3 – PREVISÃO (Imagem + Texto + Áudio)
