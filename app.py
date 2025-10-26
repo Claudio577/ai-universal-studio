@@ -146,7 +146,7 @@ with aba[2]:
             result = asr(tmp_path)
             audio_text = result["text"]
         st.success("✅ Transcrição concluída!")
-        st.text_area("🗣️ Texto transcrito automaticamente:", value=audio_text, height=100)
+        st.text_area("🗣️ Texto transcrito automaticamente:", value=audio_text, height=100, key="audio_text_area")
 
     # 🧠 Geração da descrição da imagem
     desc_img = ""
