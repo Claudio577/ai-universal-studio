@@ -161,6 +161,33 @@ with aba[2]:
     entrada = f"{desc_img} {texto_input} {audio_text}".strip()
     st.text_area("🧩 Entrada combinada:", value=entrada, height=120)
 
+    # 🧩 Combina todas as fontes de entrada
+entrada = f"{desc_img} {texto_input} {audio_text}".strip()
+st.text_area("🧩 Entrada combinada:", value=entrada, height=120)
+
+# ======================================================
+# 🔑 Mostrar palavras reconhecidas pelo modelo
+# ======================================================
+if entrada and st.session_state.vectorizer:
+    vocab = set(st.session_state.vectorizer.get_feature_names_out())
+    palavras_entrada = set(st.session_state.vectorizer.build_tokenizer()(entrada.lower()))
+    
+    palavras_reconhecidas = palavras_entrada.intersection(vocab)
+    palavras_nao_reconhecidas = palavras_entrada.difference(vocab)
+
+    st.markdown("### 🧠 Palavras reconhecidas pelo modelo:")
+    if palavras_reconhecidas:
+        st.success(", ".join(sorted(palavras_reconhecidas)))
+    else:
+        st.warning("⚠️ Nenhuma palavra reconhecida do vocabulário treinado.")
+
+    with st.expander("🔍 Palavras não reconhecidas (fora do vocabulário):"):
+        if palavras_nao_reconhecidas:
+            st.write(", ".join(sorted(palavras_nao_reconhecidas)))
+        else:
+            st.write("Nenhuma palavra fora do vocabulário.")
+
+
     # 🔍 Fazer previsão
     if st.button("🔍 Fazer previsão"):
         if not st.session_state.modelo or not st.session_state.vectorizer:
