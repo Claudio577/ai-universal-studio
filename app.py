@@ -113,12 +113,19 @@ with aba[1]:
             })
 
             st.markdown("### 📚 Palavras aprendidas por categoria:")
-            for categoria in df_treino["categoria"].unique():
-                textos_cat = " ".join(
-                    df_treino[df_treino["categoria"] == categoria]["texto"]
-                ).lower()
-                palavras_cat = set(st.session_state.vectorizer.build_tokenizer()(textos_cat))
-                st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_cat)))
+
+df_treino = pd.DataFrame({
+    "texto": st.session_state.keywords,
+    "categoria": st.session_state.categories
+})
+
+for categoria in df_treino["categoria"].unique():
+    textos_cat = " ".join(
+        df_treino[df_treino["categoria"] == categoria]["texto"]
+    ).lower()
+    palavras_cat = set(st.session_state.vectorizer.build_tokenizer()(textos_cat))
+    st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_cat)))
+
 
 # ======================================================
 # 3️⃣ ETAPA 3 – PREVISÃO (Imagem + Texto + Áudio)
