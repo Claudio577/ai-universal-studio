@@ -217,4 +217,40 @@ with aba[2]:
                 textos_cat = " ".join(df_treino[df_treino["categoria"] == categoria]["texto"]).lower()
                 palavras_cat = set(tokenizer(textos_cat))
                 palavras_match = palavras_cat.intersection(palavras_reconhecidas)
-                if palavra:
+                if palavras_match:
+                    st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_match)))
+        else:
+            st.warning("⚠️ Nenhuma palavra reconhecida do vocabulário treinado.")
+
+        with st.expander("🔍 Palavras não reconhecidas (fora do vocabulário):"):
+            if palavras_nao_reconhecidas:
+                st.write(", ".join(sorted(palavras_nao_reconhecidas)))
+            else:
+                st.write("Nenhuma palavra fora do vocabulário.")
+
+    # ======================================================
+    # 🔍 Fazer previsão
+    # ======================================================
+    if st.button("🔍 Fazer previsão"):
+        if not st.session_state.modelo or not st.session_state.vectorizer:
+            st.warning("⚠️ Treine o modelo na Etapa 2 antes de fazer previsões.")
+        elif not entrada:
+            st.warning("⚠️ Insira uma imagem, texto e/ou áudio para prever.")
+        else:
+            X_novo = st.session_state.vectorizer.transform([entrada])
+            pred = st.session_state.modelo.predict(X_novo)[0]
+            cor = {"Baixo": "green", "Moderado": "orange", "Alto": "red"}[pred]
+
+            st.markdown(
+                f"<h3>🧠 Previsão da IA: <span style='color:{cor}'>{pred}</span></h3>",
+                unsafe_allow_html=True
+            )
+
+            exemplos_relacionados = [
+                kw for kw, cat in zip(st.session_state.keywords, st.session_state.categories)
+                if cat == pred
+            ]
+            if exemplos_relacionados:
+                st.markdown("📚 **Exemplos relacionados no treino:**")
+                st.write(exemplos_relacionados)
+
