@@ -217,4 +217,4 @@ with aba[2]:
                 textos_cat = " ".join(df_treino[df_treino["categoria"] == categoria]["texto"]).lower()
                 palavras_cat = set(tokenizer(textos_cat))
                 palavras_match = palavras_cat.intersection(palavras_reconhecidas)
-                if palavra
+                if palavra:
