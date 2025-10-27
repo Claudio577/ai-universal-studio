@@ -156,36 +156,42 @@ with aba[2]:
         with st.spinner("🔍 Gerando descrição automática da imagem..."):
             caption_en = captioner(image)[0]["generated_text"]
             desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
-st.markdown("---")
-st.subheader("🧩 Análise separada de cada entrada")
 
-if desc_img:
-    st.markdown("### 🖼️ Imagem (descrição gerada)")
-    st.write(desc_img)
-    if st.session_state.vectorizer and st.session_state.modelo:
-        X_img = st.session_state.vectorizer.transform([desc_img])
-        pred_img = st.session_state.modelo.predict(X_img)[0]
-        st.markdown(f"**Previsão baseada apenas na imagem:** 🧠 {pred_img}")
+    # ======================================================
+    # 🧩 Análise separada de cada entrada
+    # ======================================================
+    st.markdown("---")
+    st.subheader("🧩 Análise separada de cada entrada")
 
-if audio_text:
-    st.markdown("### 🎤 Áudio (transcrição reconhecida)")
-    st.write(audio_text)
-    if st.session_state.vectorizer and st.session_state.modelo:
-        X_audio = st.session_state.vectorizer.transform([audio_text])
-        pred_audio = st.session_state.modelo.predict(X_audio)[0]
-        st.markdown(f"**Previsão baseada apenas no áudio:** 🧠 {pred_audio}")
+    if desc_img:
+        st.markdown("### 🖼️ Imagem (descrição gerada)")
+        st.write(desc_img)
+        if st.session_state.vectorizer and st.session_state.modelo:
+            X_img = st.session_state.vectorizer.transform([desc_img])
+            pred_img = st.session_state.modelo.predict(X_img)[0]
+            st.markdown(f"**Previsão baseada apenas na imagem:** 🧠 {pred_img}")
 
-if texto_input:
-    st.markdown("### 💬 Texto digitado")
-    st.write(texto_input)
-    if st.session_state.vectorizer and st.session_state.modelo:
-        X_texto = st.session_state.vectorizer.transform([texto_input])
-        pred_texto = st.session_state.modelo.predict(X_texto)[0]
-        st.markdown(f"**Previsão baseada apenas no texto:** 🧠 {pred_texto}")
+    if audio_text:
+        st.markdown("### 🎤 Áudio (transcrição reconhecida)")
+        st.write(audio_text)
+        if st.session_state.vectorizer and st.session_state.modelo:
+            X_audio = st.session_state.vectorizer.transform([audio_text])
+            pred_audio = st.session_state.modelo.predict(X_audio)[0]
+            st.markdown(f"**Previsão baseada apenas no áudio:** 🧠 {pred_audio}")
 
-st.markdown("---")
+    if texto_input:
+        st.markdown("### 💬 Texto digitado")
+        st.write(texto_input)
+        if st.session_state.vectorizer and st.session_state.modelo:
+            X_texto = st.session_state.vectorizer.transform([texto_input])
+            pred_texto = st.session_state.modelo.predict(X_texto)[0]
+            st.markdown(f"**Previsão baseada apenas no texto:** 🧠 {pred_texto}")
 
+    st.markdown("---")
+
+    # ======================================================
     # 🧩 Combina todas as fontes de entrada
+    # ======================================================
     entrada = f"{desc_img} {texto_input} {audio_text}".strip()
     st.text_area("🧩 Entrada combinada:", value=entrada, height=120, key="entrada_combinada")
 
@@ -211,39 +217,4 @@ st.markdown("---")
                 textos_cat = " ".join(df_treino[df_treino["categoria"] == categoria]["texto"]).lower()
                 palavras_cat = set(tokenizer(textos_cat))
                 palavras_match = palavras_cat.intersection(palavras_reconhecidas)
-                if palavras_match:
-                    st.markdown(f"**{categoria}:** " + ", ".join(sorted(palavras_match)))
-        else:
-            st.warning("⚠️ Nenhuma palavra reconhecida do vocabulário treinado.")
-
-        with st.expander("🔍 Palavras não reconhecidas (fora do vocabulário):"):
-            if palavras_nao_reconhecidas:
-                st.write(", ".join(sorted(palavras_nao_reconhecidas)))
-            else:
-                st.write("Nenhuma palavra fora do vocabulário.")
-
-    # ======================================================
-    # 🔍 Fazer previsão
-    # ======================================================
-    if st.button("🔍 Fazer previsão"):
-        if not st.session_state.modelo or not st.session_state.vectorizer:
-            st.warning("⚠️ Treine o modelo na Etapa 2 antes de fazer previsões.")
-        elif not entrada:
-            st.warning("⚠️ Insira uma imagem, texto e/ou áudio para prever.")
-        else:
-            X_novo = st.session_state.vectorizer.transform([entrada])
-            pred = st.session_state.modelo.predict(X_novo)[0]
-            cor = {"Baixo": "green", "Moderado": "orange", "Alto": "red"}[pred]
-
-            st.markdown(
-                f"<h3>🧠 Previsão da IA: <span style='color:{cor}'>{pred}</span></h3>",
-                unsafe_allow_html=True
-            )
-
-            exemplos_relacionados = [
-                kw for kw, cat in zip(st.session_state.keywords, st.session_state.categories)
-                if cat == pred
-            ]
-            if exemplos_relacionados:
-                st.markdown("📚 **Exemplos relacionados no treino:**")
-                st.write(exemplos_relacionados)
+                if palavra
