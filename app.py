@@ -156,6 +156,34 @@ with aba[2]:
         with st.spinner("🔍 Gerando descrição automática da imagem..."):
             caption_en = captioner(image)[0]["generated_text"]
             desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
+st.markdown("---")
+st.subheader("🧩 Análise separada de cada entrada")
+
+if desc_img:
+    st.markdown("### 🖼️ Imagem (descrição gerada)")
+    st.write(desc_img)
+    if st.session_state.vectorizer and st.session_state.modelo:
+        X_img = st.session_state.vectorizer.transform([desc_img])
+        pred_img = st.session_state.modelo.predict(X_img)[0]
+        st.markdown(f"**Previsão baseada apenas na imagem:** 🧠 {pred_img}")
+
+if audio_text:
+    st.markdown("### 🎤 Áudio (transcrição reconhecida)")
+    st.write(audio_text)
+    if st.session_state.vectorizer and st.session_state.modelo:
+        X_audio = st.session_state.vectorizer.transform([audio_text])
+        pred_audio = st.session_state.modelo.predict(X_audio)[0]
+        st.markdown(f"**Previsão baseada apenas no áudio:** 🧠 {pred_audio}")
+
+if texto_input:
+    st.markdown("### 💬 Texto digitado")
+    st.write(texto_input)
+    if st.session_state.vectorizer and st.session_state.modelo:
+        X_texto = st.session_state.vectorizer.transform([texto_input])
+        pred_texto = st.session_state.modelo.predict(X_texto)[0]
+        st.markdown(f"**Previsão baseada apenas no texto:** 🧠 {pred_texto}")
+
+st.markdown("---")
 
     # 🧩 Combina todas as fontes de entrada
     entrada = f"{desc_img} {texto_input} {audio_text}".strip()
