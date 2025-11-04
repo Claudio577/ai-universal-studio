@@ -135,28 +135,37 @@ with aba[2]:
     entrada = f"{desc_img} {desc_audio} {texto_input}".strip()
     st.text_area("🧩 Entrada combinada (Imagem + Áudio + Texto):", value=entrada, height=120)
 
-    # --- Botão para previsão ---
     if st.button("🔍 Fazer previsão"):
-        if not st.session_state.modelo or not st.session_state.vectorizer:
-            st.warning("⚠️ Treine o modelo na Etapa 2 antes de fazer previsões.")
-        elif not entrada:
-            st.warning("⚠️ Insira uma imagem, áudio e/ou texto para prever.")
-        else:
-            X_novo = st.session_state.vectorizer.transform([entrada])
-            pred = st.session_state.modelo.predict(X_novo)[0]
-            cor = {"Baixo": "green", "Moderado": "orange", "Alto": "red"}[pred]
+    if not st.session_state.modelo or not st.session_state.vectorizer:
+        st.warning("⚠️ Treine o modelo na Etapa 2 antes de fazer previsões.")
+    elif not entrada:
+        st.warning("⚠️ Insira uma imagem, áudio e/ou texto para prever.")
+    else:
+        # --- Realiza previsão ---
+        X_novo = st.session_state.vectorizer.transform([entrada])
+        pred = st.session_state.modelo.predict(X_novo)[0]
+        cor = {"Baixo": "green", "Moderado": "orange", "Alto": "red"}[pred]
 
-            st.markdown(
-                f"<h3>🧠 Previsão da IA: <span style='color:{cor}'>{pred}</span></h3>",
-                unsafe_allow_html=True
-            )
+        # --- Encontra a palavra-chave mais associada à categoria ---
+        exemplos_relacionados = [
+            kw for kw, cat in zip(st.session_state.keywords, st.session_state.categories)
+            if cat == pred
+        ]
+        palavra_chave = exemplos_relacionados[0] if exemplos_relacionados else "N/A"
 
-            exemplos_relacionados = [
-                kw for kw, cat in zip(st.session_state.keywords, st.session_state.categories)
-                if cat == pred
-            ]
-            if exemplos_relacionados:
-                st.markdown("📚 **Exemplos relacionados no treino:**")
-                st.write(exemplos_relacionados)
+        # --- Exibe resultado visual ---
+        st.markdown("---")
+        st.markdown(
+            f"""
+            <div style='background-color:#f0f2f6;padding:20px;border-radius:12px;text-align:center;'>
+                <h3>🧠 Previsão da IA: <span style='color:{cor};'>{pred}</span></h3>
+                <p style='font-size:18px;color:gray;'>
+                    🔑 Palavra-chave associada: <strong>{palavra_chave}</strong>
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.markdown("---")
 
 
