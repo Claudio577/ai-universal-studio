@@ -5,16 +5,13 @@ from deep_translator import GoogleTranslator
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import RandomForestClassifier
-import tempfile
-import os
-import speech_recognition as sr  # 🔊 Áudio leve
 
 # ==============================
 # ⚙️ Configuração inicial
 # ==============================
 st.set_page_config(page_title="AI Universal Studio", page_icon="🧠", layout="wide")
 st.title("🧠 AI Universal Studio")
-st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**, **textos** e **áudio (leve)** para gerar **previsões inteligentes** ⚡")
+st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**, **áudios** e **textos** para gerar **previsões inteligentes** ⚡")
 
 # ==============================
 # 🧩 Modelos
@@ -85,7 +82,7 @@ with aba[1]:
             vectorizer = CountVectorizer()
             X = vectorizer.fit_transform(st.session_state.keywords)
             y = st.session_state.categories
-            modelo = RandomForestClassifier()
+            modelo = RandomForestClassifier(random_state=42)
             modelo.fit(X, y)
             st.session_state.vectorizer = vectorizer
             st.session_state.modelo = modelo
@@ -95,54 +92,50 @@ with aba[1]:
             st.info("✅ Modelo já treinado! Você pode ir para a Etapa 3.")
 
 # ======================================================
-# 3️⃣ ETAPA 3 – PREVISÃO (Imagem + Texto + Áudio)
+# 3️⃣ ETAPA 3 – PREVISÃO (Imagem + Texto + Áudio simples)
 # ======================================================
 with aba[2]:
-    st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto + áudio leve)")
-    st.write("Envie uma **imagem**, **texto** e/ou **áudio (.wav, .mp3)** para combinar as informações e prever o risco.")
+    st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto + áudio simples)")
+    st.write("Envie uma **imagem**, **áudio** e/ou **texto descritivo**, e depois clique em **Fazer previsão** para combinar as informações.")
 
     col1, col2 = st.columns(2)
     with col1:
-        uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"])
+        uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"], key="predict_img")
     with col2:
-        uploaded_audio = st.file_uploader("🎤 Envie um áudio (opcional):", type=["wav", "mp3", "m4a"])
+        uploaded_audio = st.file_uploader("🎤 Envie um áudio (opcional):", type=["mp3", "wav"], key="predict_audio")
 
-    texto_input = st.text_area("💬 Texto descritivo (opcional):")
+    texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
 
     desc_img = ""
-    audio_text = ""
-
-    # --- Processamento da imagem ---
     if uploaded_img:
         image = Image.open(uploaded_img).convert("RGB")
         st.image(image, caption="📸 Imagem enviada", use_container_width=True)
         with st.spinner("🔍 Gerando descrição automática da imagem..."):
             caption_en = captioner(image)[0]["generated_text"]
             desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
-        st.info(f"🖼️ Descrição gerada: {desc_img}")
+            st.markdown(f"<small>Descrição da Imagem: *{desc_img}*</small>", unsafe_allow_html=True)
 
-    # --- Processamento do áudio (método leve) ---
+    # 🎧 Simulação leve de áudio — detecta palavras no nome do arquivo
+    desc_audio = ""
     if uploaded_audio:
-        recognizer = sr.Recognizer()
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-            tmp.write(uploaded_audio.getbuffer())
-            tmp_path = tmp.name
-        with sr.AudioFile(tmp_path) as source:
-            audio_data = recognizer.record(source)
-            try:
-                audio_text = recognizer.recognize_google(audio_data, language="pt-BR")
-                st.info(f"🗣️ Texto do áudio: {audio_text}")
-            except sr.UnknownValueError:
-                st.warning("⚠️ Não foi possível entender o áudio.")
-            except sr.RequestError:
-                st.error("🚫 Erro ao conectar ao serviço de reconhecimento.")
-        os.remove(tmp_path)
+        st.audio(uploaded_audio)
+        nome = uploaded_audio.name.lower()
+        palavras_chave = {
+            "risco": "risco alto detectado",
+            "seguro": "parece seguro",
+            "moderado": "risco moderado identificado",
+            "baixo": "risco baixo detectado",
+            "perigo": "perigo detectado"
+        }
+        encontrados = [texto for palavra, texto in palavras_chave.items() if palavra in nome]
+        desc_audio = " ".join(encontrados) if encontrados else "áudio neutro detectado"
+        st.markdown(f"<small>🎧 Interpretação simples do áudio: *{desc_audio}*</small>", unsafe_allow_html=True)
 
-    # --- Combinar tudo ---
-    entrada = f"{desc_img} {texto_input} {audio_text}".strip()
-    st.text_area("🧩 Entrada combinada:", value=entrada, height=120)
+    # 🔗 Combina todas as fontes
+    entrada = f"{desc_img} {desc_audio} {texto_input}".strip()
+    st.text_area("🧩 Entrada combinada (Imagem + Áudio + Texto):", value=entrada, height=120)
 
-    # --- Botão de previsão ---
+    # --- Botão para previsão ---
     if st.button("🔍 Fazer previsão"):
         if not st.session_state.modelo or not st.session_state.vectorizer:
             st.warning("⚠️ Treine o modelo na Etapa 2 antes de fazer previsões.")
