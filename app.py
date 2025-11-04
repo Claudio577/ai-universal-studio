@@ -7,30 +7,23 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.ensemble import RandomForestClassifier
 import tempfile
 import os
-import shutil
+import speech_recognition as sr  # 🔊 Áudio leve
 
 # ==============================
 # ⚙️ Configuração inicial
 # ==============================
 st.set_page_config(page_title="AI Universal Studio", page_icon="🧠", layout="wide")
 st.title("🧠 AI Universal Studio")
-st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**, **textos** e **áudio** para gerar **previsões inteligentes** ⚡")
+st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**, **textos** e **áudio (leve)** para gerar **previsões inteligentes** ⚡")
 
 # ==============================
 # 🧩 Modelos
 # ==============================
 @st.cache_resource
 def load_caption_model():
-    # BLIP-base é leve e compatível
     return pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
 
-@st.cache_resource
-def load_audio_model():
-    # Whisper-tiny: leve e rápido
-    return pipeline("automatic-speech-recognition", model="openai/whisper-tiny")
-
 captioner = load_caption_model()
-asr = load_audio_model()
 
 # ==============================
 # 🔁 Sessão compartilhada
@@ -105,16 +98,16 @@ with aba[1]:
 # 3️⃣ ETAPA 3 – PREVISÃO (Imagem + Texto + Áudio)
 # ======================================================
 with aba[2]:
-    st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto + áudio)")
-    st.write("Envie uma **imagem**, **texto** e/ou **áudio**, e depois clique em **Fazer previsão** para combinar as informações.")
+    st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto + áudio leve)")
+    st.write("Envie uma **imagem**, **texto** e/ou **áudio (.wav, .mp3)** para combinar as informações e prever o risco.")
 
     col1, col2 = st.columns(2)
     with col1:
-        uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"], key="predict_img")
+        uploaded_img = st.file_uploader("📷 Envie uma imagem (opcional):", type=["jpg", "jpeg", "png"])
     with col2:
-        uploaded_audio = st.file_uploader("🎤 Envie um áudio (opcional):", type=["wav", "mp3", "m4a"], key="predict_audio")
+        uploaded_audio = st.file_uploader("🎤 Envie um áudio (opcional):", type=["wav", "mp3", "m4a"])
 
-    texto_input = st.text_area("💬 Texto descritivo (opcional):", key="predict_text")
+    texto_input = st.text_area("💬 Texto descritivo (opcional):")
 
     desc_img = ""
     audio_text = ""
@@ -128,16 +121,22 @@ with aba[2]:
             desc_img = GoogleTranslator(source="en", target="pt").translate(caption_en)
         st.info(f"🖼️ Descrição gerada: {desc_img}")
 
-    # --- Processamento do áudio ---
+    # --- Processamento do áudio (método leve) ---
     if uploaded_audio:
-        with st.spinner("🎧 Transcrevendo áudio..."):
-            temp_path = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-            temp_path.write(uploaded_audio.getbuffer())
-            temp_path.close()
-            result = asr(temp_path.name)
-            audio_text = result["text"]
-            os.remove(temp_path.name)
-        st.info(f"🗣️ Texto do áudio: {audio_text}")
+        recognizer = sr.Recognizer()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+            tmp.write(uploaded_audio.getbuffer())
+            tmp_path = tmp.name
+        with sr.AudioFile(tmp_path) as source:
+            audio_data = recognizer.record(source)
+            try:
+                audio_text = recognizer.recognize_google(audio_data, language="pt-BR")
+                st.info(f"🗣️ Texto do áudio: {audio_text}")
+            except sr.UnknownValueError:
+                st.warning("⚠️ Não foi possível entender o áudio.")
+            except sr.RequestError:
+                st.error("🚫 Erro ao conectar ao serviço de reconhecimento.")
+        os.remove(tmp_path)
 
     # --- Combinar tudo ---
     entrada = f"{desc_img} {texto_input} {audio_text}".strip()
@@ -166,4 +165,5 @@ with aba[2]:
             if exemplos_relacionados:
                 st.markdown("📚 **Exemplos relacionados no treino:**")
                 st.write(exemplos_relacionados)
+
 
