@@ -1,6 +1,6 @@
 streamlit
-transformers==4.44.0
-torch==2.3.1
+transformers==4.36.2
+torch==2.2.0
 pandas
 scikit-learn
 Pillow
