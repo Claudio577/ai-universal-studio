@@ -4,6 +4,3 @@ torch
 pandas
 scikit-learn
 Pillow
-deep-translator
-matplotlib
-soundfile
