@@ -1,6 +1,6 @@
 import streamlit as st
 from transformers import pipeline
-from PIL import Image
+import imageio.v3 as iio
 from deep_translator import GoogleTranslator
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
@@ -119,7 +119,7 @@ with aba[2]:
 
     # --- Processamento da imagem ---
     if uploaded_img:
-        image = Image.open(uploaded_img).convert("RGB")
+        image = iio.imread(uploaded_img)
         st.image(image, caption="📸 Imagem enviada", use_container_width=True)
         with st.spinner("🔍 Gerando descrição automática da imagem..."):
             caption_en = captioner(image)[0]["generated_text"]
