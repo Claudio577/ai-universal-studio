@@ -22,7 +22,7 @@ st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**
 @st.cache_resource
 def load_caption_model():
     # Upgrade: Usando BLIP-Large para descrições de imagem mais ricas e precisas
-    return pipeline("image-to-text", model="Salesforce/blip-large")
+    return pipeline("image-to-text", model="Salesforce/blip-base")
 
 @st.cache_resource
 def load_audio_model():
