@@ -21,11 +21,13 @@ st.write("Demonstração de um sistema de IA que aprende a partir de **imagens**
 # ==============================
 @st.cache_resource
 def load_caption_model():
-    return pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")  # leve e compatível
+    # BLIP-base é leve e compatível
+    return pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
 
 @st.cache_resource
 def load_audio_model():
-    return pipeline("automatic-speech-recognition", model="openai/whisper-tiny")  # leve e rápido
+    # Whisper-tiny: leve e rápido
+    return pipeline("automatic-speech-recognition", model="openai/whisper-tiny")
 
 captioner = load_caption_model()
 asr = load_audio_model()
@@ -104,7 +106,7 @@ with aba[1]:
 # ======================================================
 with aba[2]:
     st.header("🔮 Etapa 3 – Fazer previsão com novos dados (imagem + texto + áudio)")
-    st.write("Envie uma **imagem**, **texto** e/ou **áudio**, e depois clique em **Fazer previsão**.")
+    st.write("Envie uma **imagem**, **texto** e/ou **áudio**, e depois clique em **Fazer previsão** para combinar as informações.")
 
     col1, col2 = st.columns(2)
     with col1:
