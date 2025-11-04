@@ -33,7 +33,8 @@ def load_audio_model():
 def load_translator():
     # Novo: Usando modelo de tradução da HF (Helsinki-NLP) para consistência e performance
     # Tradução de Inglês (EN) para Português (PT)
-    return pipeline("translation_en_to_pt", model="Helsinki-NLP/opus-mt-en-pt")
+    return pipeline("translation", model="facebook/nllb-200-distilled-600M", src_lang="eng_Latn", tgt_lang="por_Latn")
+
 
 captioner = load_caption_model()
 asr = load_audio_model()
