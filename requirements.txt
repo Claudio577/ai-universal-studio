@@ -1,8 +1,7 @@
 streamlit
-transformers
-torch
+transformers==4.44.0
+torch==2.3.1
 pandas
 scikit-learn
 Pillow
 deep-translator
-matplotlib
