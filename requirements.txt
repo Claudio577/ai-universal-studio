@@ -1,11 +1,11 @@
 streamlit
 transformers
+sentence-transformers
 torch
+torchvision
+faster-whisper
+deep-translator
 pandas
 scikit-learn
 Pillow
-deep-translator
-SpeechRecognition
-pydub
 joblib
-matplotlib
