@@ -5,4 +5,7 @@ pandas
 scikit-learn
 Pillow
 deep-translator
+SpeechRecognition
+pydub
+joblib
 matplotlib
